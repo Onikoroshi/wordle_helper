@@ -1,0 +1,25 @@
+<%= form_with(model: guess) do |form| %>
+  <% if guess.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(guess.errors.count, "error") %> prohibited this guess from being saved:</h2>
+
+      <ul>
+        <% guess.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form.label :guessed_word, "word to guess" %>
+  <%= form.text_field :guessed_word %>
+
+  <%= form.label :colored_results %>
+  <%= form.text_field :colored_results %>
+
+  <%= hidden_field_tag "target_date", @target_date %>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

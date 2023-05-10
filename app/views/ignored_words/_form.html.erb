@@ -1,0 +1,17 @@
+<%= form_with(model: ignored_word) do |form| %>
+  <% if ignored_word.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(ignored_word.errors.count, "error") %> prohibited this ignored_word from being saved:</h2>
+
+      <ul>
+        <% ignored_word.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

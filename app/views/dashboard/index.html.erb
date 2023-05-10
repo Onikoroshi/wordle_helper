@@ -1,0 +1,109 @@
+<br>
+<br>
+
+<table>
+  <% @today_guesses.each do |guess| %>
+    <tr>
+      <td style="border-bottom:1pt solid black;"><%= guess.guessed_word %></td>
+      <td style="border-bottom:1pt solid black;"><%= guess.colored_results %></td>
+      <td style="border-bottom:1pt solid black;">
+        <% guess.final_knowledge_info.each do |letter_list| %>
+          <%= letter_list.join("") %>
+          <br>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+</table>
+
+<div>
+  <%= render 'guesses/form', guess: @guess %>
+<div>
+
+<table>
+  <tr>
+    <% @current_word_list.letter_weights_array.sort{|a, b| b.weight <=> a.weight }.each do |letter_weight| %>
+      <td><%= letter_weight.to_s %></td>
+    <% end %>
+  </tr>
+  <tr>
+    <% @current_word_list.letter_weights_array.sort{|a, b| b.weight <=> a.weight }.each do |letter_weight| %>
+      <td><%= letter_weight.pos_weights.join("<br>").html_safe %></td>
+    <% end %>
+  </tr>
+</table>
+
+<hr>
+
+<% if @weighted_word_list.count < 22 && @weighted_word_list.count > 1 %>
+  <table>
+    <th>Shared Letters: <%= @current_word_list.shared_unguessed_letters.map{ |letter| "#{letter} - #{@current_word_list.letter_touches_answers(letter)}" }.to_sentence %></th>
+    <% @current_word_list.top_using_shared_unguessed_letters.each do |bridge_word| %>
+      <tr><td><a href=<%= root_path + "?bridge_word=#{bridge_word.word}" %> ><%= "#{'*' if @current_bridge_word == bridge_word.word}" + bridge_word.word %></a> - <%= bridge_word.unique_letters_covered.join(", ") %> unique letters - <%= bridge_word.other_letters_covered.join(", ") %> other letters - <%= bridge_word.words_covered.count %> words - <%= bridge_word.black_letters.join(", ") %> black letters - <%= bridge_word.unused_letters.join(", ") %> unused letters - <%= bridge_word.score %></td></tr>
+    <% end %>
+  </table>
+<% elsif Guess.for_today.any? && @weighted_word_list.count > 1 %>
+  <table>
+    <th>Word</th>
+    <th>Total Weight</th>
+    <th>Naive Weight</th>
+    <% (1..5).each do |index| %>
+      <th><%= index %></th>
+    <% end %>
+    <th>Total Position Weight</th>
+    <% @current_word_list.top_choices_from_all.each do |top_choice| %>
+    <tr>
+      <td><%= top_choice.word %></td>
+      <td style="border-right:1pt solid black;"><%= top_choice.total_weight %></td>
+      <td style="border-right:1pt solid black;"><%= top_choice.weight %></td>
+      <% top_choice.position_weights.each do |position_weight| %>
+        <td><%= position_weight %></td>
+      <% end %>
+      <td style="border-left:1pt solid black;"><%= top_choice.total_pos_weight %></td>
+    </tr>
+    <% end %>
+  </table>
+<% end %>
+
+<% if @current_bridge_word.present? %>
+  <% @letter_array = @current_bridge_word.split("") %>
+  <table>
+    <th></th>
+    <th>Word</th>
+    <th colspan="5">Letters</th>
+    <% @weighted_word_list.each do |word_weight| %>
+      <% found_ignored_word = @ignored_words.detect{|iw| iw.word == word_weight.word} %>
+      <tr>
+        <td><% if found_ignored_word.present? %><%= link_to 'unignore', found_ignored_word, method: :delete %><% else %><%= link_to 'ignore', ignored_words_path(ignored_word: {word: word_weight.word}), method: :post %><% end %></td>
+        <td><% if found_ignored_word.present? %><s><% end %><a href=<%= root_path + "?bridge_word=#{word_weight.word}" %> ><%= "#{'*' if @current_bridge_word == word_weight.word}" + word_weight.word %></a><% if found_ignored_word.present? %></s><% end %></td>
+        <% word_weight.word.split("").each_with_index do |letter, index| %>
+          <td bgcolor=<%= @letter_array[index] == letter ? "#0A4706" : @letter_array.include?(letter) ? "#FFE252" : "#FFFFFF" %>><%= letter %></td>
+        <% end %>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <table>
+    <th></th>
+    <th>Word (<%= @weighted_word_list.length %>)</th>
+    <th>Total Weight</th>
+    <th>Naive Weight</th>
+    <% (1..5).each do |index| %>
+      <th><%= index %></th>
+    <% end %>
+    <th>Total Position Weight</th>
+    <% @display_word_list.each do |word_weight| %>
+      <% found_ignored_word = @ignored_words.detect{|iw| iw.word == word_weight.word} %>
+      <tr>
+        <td><% if found_ignored_word.present? %><%= link_to 'unignore', found_ignored_word, method: :delete %><% else %><%= link_to 'ignore', ignored_words_path(ignored_word: {word: word_weight.word}), method: :post %><% end %></td>
+        <td><% if found_ignored_word.present? %><s><% end %><% if word_weight.without_repeats? %><b><% end %><%= word_weight.word %><% if word_weight.without_repeats? %></b><% if found_ignored_word.present? %></s><% end %><% end %></td>
+        <td style="border-right:1pt solid black;"><%= word_weight.total_weight %></td>
+        <td style="border-right:1pt solid black;"><%= word_weight.weight %></td>
+        <% word_weight.position_weights.each do |position_weight| %>
+          <td><%= position_weight %></td>
+        <% end %>
+        <td style="border-left:1pt solid black;"><%= word_weight.total_pos_weight %></td>
+      </tr>
+    <% end %>
+  </table>
+<% end %>
